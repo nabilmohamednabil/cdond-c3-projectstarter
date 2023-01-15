@@ -90,10 +90,6 @@ jobs:
             npm install
             npm audit fix --audit-level=critical 
             npm audit --audit-level=critical
-      - slack/notify:
-          channel: $SLACK_DEFAULT_CHANNEL
-          event: fail
-          template: basic_fail_1
           
   scan-backend:
     docker:
@@ -114,10 +110,7 @@ jobs:
             npm audit fix --audit-level=critical 
             npm audit fix --audit-level=critical 
             npm audit --audit-level=critical
-      - slack/notify:
-          channel: $SLACK_DEFAULT_CHANNEL
-          event: fail
-          template: basic_fail_1
+
 
 workflows:
   default:
