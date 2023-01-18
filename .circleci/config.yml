@@ -193,6 +193,18 @@ jobs:
             cat backend/.env         
             cd .circleci/ansible
             ansible-playbook -i inventory.txt configure-server.yml -v 
+    
+  run-migrations:
+    docker:
+        - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations > migrations_dump.txt
 
 
 workflows:
@@ -215,7 +227,8 @@ workflows:
               only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-          
+      - run-migrations:
+          requires: [configure-infrastructure]
           
           
           
