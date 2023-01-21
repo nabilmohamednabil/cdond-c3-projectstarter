@@ -19,7 +19,7 @@ commands:
             aws --region us-east-1 cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
             aws --region us-east-1 cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
             
- revert-migrations:
+  revert-migrations:
     description: Revert the DB migration based on the workflow ID.
     parameters:
       Workflow_ID:
