@@ -3,6 +3,40 @@ version: 2.1
 orbs: 
   slack: circleci/slack@4.10.1
   
+commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks which are created based on the work flow ID.
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}
+    steps:
+      - run:
+          name: Destroy environments created
+          when: on_fail
+          command: |
+            aws --region us-east-1 s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
+            aws --region us-east-1 cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
+            aws --region us-east-1 cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
+            
+ revert-migrations:
+    description: Revert the DB migration based on the workflow ID.
+    parameters:
+      Workflow_ID:
+        type: string
+        default: ${CIRCLE_WORKFLOW_ID:0:7}    
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+              SUCCESS=$(curl --insecure  https://kvdb.io/DxNmZQEn54JqJq8b5EkJks/migration_<< parameters.Workflow_ID >>)
+              if (( $SUCCESS == 1 ));
+              then
+                cd ~/project/backend
+                npm install
+                npm run migration:revert
+              fi
 
             
 jobs:
