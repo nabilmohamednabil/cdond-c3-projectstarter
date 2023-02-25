@@ -299,6 +299,8 @@ jobs:
           fingerprints: ["cd:ff:1c:b1:7c:25:06:08:12:4b:6f:88:58:63:65:f8"]
       - attach_workspace:
           at: ~/
+      - restore_cache:
+          keys: [backend-build]
 
       - run:
           name: Install aws dependencies
@@ -315,19 +317,23 @@ jobs:
             sudo apt install ansible -y
 
       - run:
+          name: Package backend
+          command: |
+            cd backend
+            npm run build
+            tar -czf artifact.tar.gz dist/* package*
+            cd ..
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            
+      - run:
           name: Deploy backend
           command: |
-            cd backend # echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
-            npm i
-            npm run build
-            cd ..
-            tar -C backend -czvf artifact.tar.gz .
-            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*{.ts,.js}
             cd .circleci/ansible
-            echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml -v
+            ansible-playbook -i inventory.txt deploy-backend.yml
 
   smoke-test:
     docker:
