@@ -204,7 +204,7 @@ jobs:
     steps:
       - checkout       
       - add_ssh_keys:
-          fingerprints: ["cd:ff:1c:b1:7c:25:06:08:12:4b:6f:88:58:63:65:f8"]
+          fingerprints: ["36:c0:36:34:9f:8b:5a:78:c9:37:97:be:21:03:a9:e1"]
       - attach_workspace:
           at: ~/
 
@@ -283,7 +283,7 @@ jobs:
     steps:
       - checkout       
       - add_ssh_keys:
-          fingerprints: ["cd:ff:1c:b1:7c:25:06:08:12:4b:6f:88:58:63:65:f8"]
+          fingerprints: ["36:c0:36:34:9f:8b:5a:78:c9:37:97:be:21:03:a9:e1"]
       - attach_workspace:
           at: ~/
       - restore_cache:
@@ -353,10 +353,12 @@ jobs:
             echo ${URL} 
             if curl -s ${URL} | grep "Welcome"
             then
-              echo "success"
+               exit 1
             else
                echo "success"
             fi     
+      - destroy-environment
+      - revert-migrations
             
   cloudfront-update:
     docker:
@@ -417,7 +419,21 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [master]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
           
           
           
